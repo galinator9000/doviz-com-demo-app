@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { List, Table, Layout } from 'antd';
+import React, {  } from 'react';
+import { List } from 'antd';
 
 const ExchangesListElementView = (props) => {
 	return (
