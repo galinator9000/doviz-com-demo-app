@@ -1,15 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Layout, Space, Button, Statistic } from 'antd';
 import axios from 'axios';
-import ExchangesListElementView from './ExchangesListElementView';
+import useWebSocket from 'react-use-websocket';
 
 // Consts
 const { Header, Content } = Layout;
 const ENDPOINT_URL = "http://localhost:8080";
+const ENDPOINT_WS_URL = "ws://localhost:8080";
 
 const ExchangesListView = () => {
 	const [exchangeListData, setExchangeListData] = useState([]);
 	const [exchangeListDataLoading, setExchangeListDataLoading] = useState(false);
+
+	const {sendMessage: ws_sendMessage} = useWebSocket(
+		ENDPOINT_WS_URL,
+		{
+			onOpen: () => {
+				console.log("[*] WebSocket connection established with the server");
+			},
+			onMessage: (event) => {
+				console.log(event.data);
+			},
+			shouldReconnect: (closeEvent) => true,
+		}
+	);
+
+	// Set the function that periodically asks the server whether any user alert is triggered
+	useEffect(
+		() => {
+			const interval = setInterval(
+				() => {
+					ws_sendMessage("CHECK_USER_TRIGGERS");
+				},
+				30000
+			);
+			return () => clearInterval(interval);
+		},
+		[]
+	);
 
 	const refreshExchangeListData = () => {
 		// Fetch data from the API endpoint
@@ -36,19 +64,20 @@ const ExchangesListView = () => {
 		{title: 'Döviz Kodu', dataIndex: 'code', key: 'code'},
 		{title: 'Döviz Adı', dataIndex: 'name', key: 'name'},
 		{
-			title: 'Değer', dataIndex: 'value', key: 'value',
+			title: 'Güncel Değer', dataIndex: 'value', key: 'value',
 			render: (value) => (
+				value ?
 				<Statistic
 					value={value}
 					precision={2}
 					suffix="₺"
-				/>
+				/> : "Güncel kayıt yok"
 			)
 		},
 		{
 			title: 'Son Güncelleme', dataIndex: 'timestamp', key: 'timestamp',
 			render: (value) => (
-				(new Date(value)).toLocaleString("tr-TR")
+				value ? ((new Date(value)).toLocaleString("tr-TR")) : "Güncel kayıt yok"
 			)
 		},
 		{
