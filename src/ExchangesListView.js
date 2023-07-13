@@ -32,7 +32,6 @@ const ExchangesListView = () => {
 			onMessage: (event) => {
 				// Process the triggered alerts
 				let triggeredAlerts = JSON.parse(event.data);
-				console.log(triggeredAlerts);
 
 				triggeredAlerts.forEach(alert => (
 					alert.messages.forEach(
@@ -51,7 +50,7 @@ const ExchangesListView = () => {
 				() => {
 					ws_sendMessage("CHECK_USER_TRIGGERS");
 				},
-				30000
+				5000
 			);
 			const refreshDataInterval = setInterval(
 				() => {
@@ -79,10 +78,7 @@ const ExchangesListView = () => {
 				setExchangeListDataLoading(false);
 			} catch (error) {
 				console.error('Error fetching data:', error);
-				toast("Sunucuyla bağlantı kurulamadı!", {
-					position: "top-left",
-					autoClose: 5000
-				});
+				toast("Sunucuyla bağlantı kurulamadı!", {autoClose: 5000});
 				setExchangeListDataLoading(false);
 			}
 		};
@@ -98,13 +94,9 @@ const ExchangesListView = () => {
 				const response = await axios.get(`${ENDPOINT_URL}/getUserCurrencyAlerts`);
 				setUserCurrencyAlertData(response.data);
 				setUserCurrencyAlertDataLoading(false);
-				console.log(response.data);
 			} catch (error) {
 				console.error('Error fetching data:', error);
-				toast("Sunucuyla bağlantı kurulamadı!", {
-					position: "top-left",
-					autoClose: 5000
-				});
+				toast("Sunucuyla bağlantı kurulamadı!", {autoClose: 5000});
 				setUserCurrencyAlertDataLoading(false);
 			}
 		};
@@ -172,8 +164,8 @@ const ExchangesListView = () => {
 
 			<ToastContainer
 				position="top-left"
-				autoClose={false}
-				hideProgressBar={false}
+				autoClose={120000}
+				hideProgressBar={true}
 				newestOnTop={true}
 				draggable={false}
 				theme="dark"

@@ -10,6 +10,11 @@ const ExchangesUserTriggerColumnView = ({record, currencyAlert, userCurrencyAler
 
     const [isSubmitLoading, setIsSubmitLoading] = useState(false);
     const onButtonSubmit = async () => {
+        if((!inputValue) || (inputValue <= 0)){
+            toast("Hatalı değer!", {autoClose: 5000, hideProgressBar: false});
+            return;
+        }
+
         setIsSubmitLoading(true);
 
         const isSuccessful = await axios.post(
@@ -18,15 +23,15 @@ const ExchangesUserTriggerColumnView = ({record, currencyAlert, userCurrencyAler
                 alertType: "exceed",
                 currencyCode: record.code,
                 alertValue: inputValue,
-                isTriggered: false
+                isSentToUser: false
             }
         );
 
         setIsSubmitLoading(false);
         if(isSuccessful){
-            toast("Değer güncellendi!");
+            toast("Değer güncellendi!", {autoClose: 5000, hideProgressBar: false});
         }else{
-            toast("Değer güncelleme başarısız!");
+            toast("Değer güncelleme başarısız!", {autoClose: 5000, hideProgressBar: false});
         }
     };
 
@@ -44,9 +49,9 @@ const ExchangesUserTriggerColumnView = ({record, currencyAlert, userCurrencyAler
         setIsSubmitLoading(false);
         if(isSuccessful){
             setInputValue(null);
-            toast("Uyarı silindi!");
+            toast("Uyarı silindi!", {autoClose: 5000, hideProgressBar: false});
         }else{
-            toast("Uyarı silme işlemi başarısız!");
+            toast("Uyarı silme işlemi başarısız!", {autoClose: 5000, hideProgressBar: false});
         }
     };
 
