@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Table, Layout, Space, Button, Statistic } from 'antd';
 import axios from 'axios';
 import useWebSocket from 'react-use-websocket';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Consts
 const { Header, Content } = Layout;
@@ -19,7 +21,13 @@ const ExchangesListView = () => {
 				console.log("[*] WebSocket connection established with the server");
 			},
 			onMessage: (event) => {
-				console.log(event.data);
+				// Process the triggered  alerts
+				let triggeredAlerts = JSON.parse(event.data);
+				console.log(triggeredAlerts);
+
+				triggeredAlerts.forEach((alert) => {
+					toast(alert.message);
+				});
 			},
 			shouldReconnect: (closeEvent) => true,
 		}
@@ -32,7 +40,7 @@ const ExchangesListView = () => {
 				() => {
 					ws_sendMessage("CHECK_USER_TRIGGERS");
 				},
-				30000
+				15000
 			);
 			return () => clearInterval(interval);
 		},
@@ -49,6 +57,10 @@ const ExchangesListView = () => {
 				setExchangeListDataLoading(false);
 			} catch (error) {
 				console.error('Error fetching data:', error);
+				toast("Sunucuyla bağlantı kurulamadı!", {
+					position: "top-left",
+					autoClose: 5000
+				});
 				setExchangeListDataLoading(false);
 			}
 		};
@@ -103,6 +115,15 @@ const ExchangesListView = () => {
 			<Content>
 				<Table dataSource={exchangeListData} columns={exchangeListColumns} pagination={false} loading={exchangeListDataLoading} />
 			</Content>
+
+			<ToastContainer
+				position="top-left"
+				autoClose={false}
+				hideProgressBar={false}
+				newestOnTop={true}
+				draggable={false}
+				theme="dark"
+			></ToastContainer>
 		</Layout>
 	);
 };
