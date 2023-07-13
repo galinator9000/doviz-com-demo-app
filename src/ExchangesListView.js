@@ -1,20 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Layout, Space, Button, Statistic } from 'antd';
+import { Table, Layout, Button, Statistic } from 'antd';
 import axios from 'axios';
 import useWebSocket from 'react-use-websocket';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ExchangesUserTriggerColumnView from './ExchangesUserTriggerColumnView';
 
 // Consts
+import { 
+    ENDPOINT_URL,
+    ENDPOINT_WS_URL
+} from './consts';
 const { Header, Content } = Layout;
-const ENDPOINT_URL = "http://localhost:8080";
-const ENDPOINT_WS_URL = "ws://localhost:8080";
 
 // Component that contains the main exchange list's structure
 const ExchangesListView = () => {
 	// Set the states that holds the table data
 	const [exchangeListData, setExchangeListData] = useState([]);
 	const [exchangeListDataLoading, setExchangeListDataLoading] = useState(false);
+
+	const [userCurrencyAlertData, setUserCurrencyAlertData] = useState([]);
+	const [userCurrencyAlertDataLoading, setUserCurrencyAlertDataLoading] = useState(false);
 
 	// Use the imported module in order to connect to the server-side websocket service
 	const {sendMessage: ws_sendMessage} = useWebSocket(
@@ -24,13 +30,15 @@ const ExchangesListView = () => {
 				console.log("[*] WebSocket connection established with the server");
 			},
 			onMessage: (event) => {
-				// Process the triggered  alerts
+				// Process the triggered alerts
 				let triggeredAlerts = JSON.parse(event.data);
 				console.log(triggeredAlerts);
 
-				triggeredAlerts.forEach((alert) => {
-					toast(alert.message);
-				});
+				triggeredAlerts.forEach(alert => (
+					alert.messages.forEach(
+						msg => toast(msg)
+					)
+				));
 			},
 			shouldReconnect: (closeEvent) => true,
 		}
@@ -43,9 +51,15 @@ const ExchangesListView = () => {
 				() => {
 					ws_sendMessage("CHECK_USER_TRIGGERS");
 				},
-				15000
+				30000
 			);
-			const refreshDataInterval = setInterval(refreshExchangeListData, 30000);
+			const refreshDataInterval = setInterval(
+				() => {
+					refreshExchangeListData();
+					refreshUserCurrencyAlertData();
+				},
+				30000
+			);
 			return () => {
 				clearInterval(userTriggerAlertInterval);
 				clearInterval(refreshDataInterval);
@@ -54,7 +68,7 @@ const ExchangesListView = () => {
 		[]
 	);
 
-	// Function that refreshes the data
+	// Function that loads the exchange table data
 	const refreshExchangeListData = () => {
 		// Fetch data from the API endpoint
 		const fetchData = async () => {
@@ -73,10 +87,36 @@ const ExchangesListView = () => {
 			}
 		};
 		fetchData();
-	}
+	};
 
+	// Function that loads the user exchange alert data
+	const refreshUserCurrencyAlertData = () => {
+		// Fetch data from the API endpoint
+		const fetchData = async () => {
+			setUserCurrencyAlertDataLoading(true);
+			try {
+				const response = await axios.get(`${ENDPOINT_URL}/getUserCurrencyAlerts`);
+				setUserCurrencyAlertData(response.data);
+				setUserCurrencyAlertDataLoading(false);
+				console.log(response.data);
+			} catch (error) {
+				console.error('Error fetching data:', error);
+				toast("Sunucuyla bağlantı kurulamadı!", {
+					position: "top-left",
+					autoClose: 5000
+				});
+				setUserCurrencyAlertDataLoading(false);
+			}
+		};
+		fetchData();
+	};
+
+	// Load initial data
 	useEffect(
-		refreshExchangeListData,
+		() => {
+			refreshExchangeListData();
+			refreshUserCurrencyAlertData();
+		},
 		[]
 	);
 
@@ -102,13 +142,17 @@ const ExchangesListView = () => {
 			)
 		},
 		{
-			title: 'İşlemler',
+			title: 'Uyarı için limit değer',
 			key: 'action',
-			render: (_, record) => (
-				<Space size="middle">
-					<Button type="primary">Uyarı Ekle</Button>
-				</Space>
-			),
+			render: (_, record) => {
+				let currencyAlert = userCurrencyAlertData.filter(alert => alert.currencyCode === record.code)[0];
+				return <ExchangesUserTriggerColumnView
+					record={record}
+					currencyAlert={currencyAlert}
+					userCurrencyAlertDataLoading={userCurrencyAlertDataLoading}
+					toast={toast}
+				/>
+			},
 		},
 	];
 
