@@ -10,10 +10,13 @@ const { Header, Content } = Layout;
 const ENDPOINT_URL = "http://localhost:8080";
 const ENDPOINT_WS_URL = "ws://localhost:8080";
 
+// Component that contains the main exchange list's structure
 const ExchangesListView = () => {
+	// Set the states that holds the table data
 	const [exchangeListData, setExchangeListData] = useState([]);
 	const [exchangeListDataLoading, setExchangeListDataLoading] = useState(false);
 
+	// Use the imported module in order to connect to the server-side websocket service
 	const {sendMessage: ws_sendMessage} = useWebSocket(
 		ENDPOINT_WS_URL,
 		{
@@ -36,17 +39,22 @@ const ExchangesListView = () => {
 	// Set the function that periodically asks the server whether any user alert is triggered
 	useEffect(
 		() => {
-			const interval = setInterval(
+			const userTriggerAlertInterval = setInterval(
 				() => {
 					ws_sendMessage("CHECK_USER_TRIGGERS");
 				},
 				15000
 			);
-			return () => clearInterval(interval);
+			const refreshDataInterval = setInterval(refreshExchangeListData, 30000);
+			return () => {
+				clearInterval(userTriggerAlertInterval);
+				clearInterval(refreshDataInterval);
+			}
 		},
 		[]
 	);
 
+	// Function that refreshes the data
 	const refreshExchangeListData = () => {
 		// Fetch data from the API endpoint
 		const fetchData = async () => {
@@ -72,6 +80,7 @@ const ExchangesListView = () => {
 		[]
 	);
 
+	// Table column customization
 	const exchangeListColumns = [
 		{title: 'Döviz Kodu', dataIndex: 'code', key: 'code'},
 		{title: 'Döviz Adı', dataIndex: 'name', key: 'name'},
@@ -103,6 +112,7 @@ const ExchangesListView = () => {
 		},
 	];
 
+	// ListView's final render structure
 	return (
 		<Layout style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
 			<Header style={{ backgroundColor: '#f0f2f5', textAlign: 'center' }}>
