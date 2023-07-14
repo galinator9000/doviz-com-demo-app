@@ -50,14 +50,14 @@ const ExchangesListView = () => {
 				() => {
 					ws_sendMessage("CHECK_USER_TRIGGERS");
 				},
-				5000
+				15000
 			);
 			const refreshDataInterval = setInterval(
 				() => {
 					refreshExchangeListData();
 					refreshUserCurrencyAlertData();
 				},
-				30000
+				1200000
 			);
 			return () => {
 				clearInterval(userTriggerAlertInterval);
