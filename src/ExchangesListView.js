@@ -23,7 +23,7 @@ const ExchangesListView = () => {
 	const [userCurrencyAlertDataLoading, setUserCurrencyAlertDataLoading] = useState(false);
 
 	// Use the imported module in order to connect to the server-side websocket service
-	const {sendMessage: ws_sendMessage} = useWebSocket(
+	useWebSocket(
 		ENDPOINT_WS_URL,
 		{
 			onOpen: () => {
@@ -46,21 +46,14 @@ const ExchangesListView = () => {
 	// Set the function that periodically asks the server whether any user alert is triggered
 	useEffect(
 		() => {
-			const userTriggerAlertInterval = setInterval(
-				() => {
-					ws_sendMessage("CHECK_USER_TRIGGERS");
-				},
-				15000
-			);
 			const refreshDataInterval = setInterval(
 				() => {
 					refreshExchangeListData();
 					refreshUserCurrencyAlertData();
 				},
-				1200000
+				30000
 			);
 			return () => {
-				clearInterval(userTriggerAlertInterval);
 				clearInterval(refreshDataInterval);
 			}
 		},
